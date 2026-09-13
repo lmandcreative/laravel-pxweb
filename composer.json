@@ -1,0 +1,43 @@
+{
+    "name": "lmsomeco/laravel-pxweb",
+    "description": "PxWeb API client for Laravel — table metadata discovery, candidate-URL resolution, and json-stat2 parsing.",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^4.0",
+        "laravel/pint": "^1.27"
+    },
+    "autoload": {
+        "psr-4": {
+            "LmSomeco\\PxWeb\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LmSomeco\\PxWeb\\Tests\\": "tests/"
+        },
+        "files": [
+            "tests/Fixtures.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "LmSomeco\\PxWeb\\PxWebServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
