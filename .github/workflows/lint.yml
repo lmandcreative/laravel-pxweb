@@ -1,0 +1,74 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pint:
+    runs-on: ubuntu-latest
+    name: Pint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Check code style
+        run: vendor/bin/pint --test
+
+  neutrality:
+    runs-on: ubuntu-latest
+    name: Domain neutrality
+
+    # The package's defining constraint is that it carries no domain
+    # vocabulary: base URL and table path are always caller-supplied. An
+    # earlier iteration shipped a postalVar() that detected "the geographic
+    # dimension" by regex-matching five-digit postal codes — a generic name
+    # wrapping entirely domain-specific behaviour. These are the mechanical
+    # version of that rule, so the residue cannot creep back in unnoticed.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assert src/ carries no domain vocabulary
+        run: |
+          # "parent" is masked first: it contains "rent" and is a PHP keyword,
+          # not a domain term. Everything else matches as a substring, so
+          # $current_price and "Finland" are both caught.
+          if grep -rn --include='*.php' -E '.' src/ \
+            | sed -E 's/\bparent\b/@@KW@@/g' \
+            | grep -inE 'postal|pnro|rent|price|vuokra|hinta|finl|suomi|statfin|hintakartta'
+          then
+            echo "::error::Domain vocabulary found in src/. This package must stay agency- and subject-agnostic."
+            exit 1
+          fi
+          echo "src/ is clean."
+
+      - name: Assert src/ reads no configuration
+        run: |
+          # HTTP behaviour belongs to the injected PendingRequest, so there is
+          # nothing for the package itself to configure.
+          if grep -rnE --include='*.php' '\b(config|env)\s*\(' src/; then
+            echo "::error::src/ must not call config() or env(); configuration belongs to the consumer."
+            exit 1
+          fi
+          if [ -d config ]; then
+            echo "::error::This package ships no config directory."
+            exit 1
+          fi
+          echo "No configuration surface."

@@ -185,6 +185,19 @@ vendor/bin/pest
 vendor/bin/pint
 ```
 
+### CI
+
+Two workflows run on pull requests and on pushes to `main`:
+
+- **tests** — Pest on PHP 8.4, against both the lowest and the highest allowed
+  dependency sets. The lowest-dependency job is the one that earns its keep: it
+  proves the version constraints in `composer.json` are honest rather than
+  merely permissive.
+- **lint** — Pint, plus a *domain neutrality* guard that fails the build if
+  `src/` grows domain vocabulary or starts reading configuration.
+
+Both are green locally with `vendor/bin/pest` and `vendor/bin/pint --test`.
+
 ## License
 
 MIT.

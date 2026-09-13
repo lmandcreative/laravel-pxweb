@@ -1,0 +1,48 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The package pins php ^8.4 and illuminate/* ^13.0 deliberately, so the
+        # matrix is one PHP version wide. The second axis is what earns its
+        # keep: running the lowest allowed dependency set proves the version
+        # constraints in composer.json are honest rather than merely permissive.
+        php: ['8.4']
+        dependencies: [lowest, highest]
+
+    name: PHP ${{ matrix.php }} / ${{ matrix.dependencies }} deps
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: ${{ matrix.dependencies }}
+
+      - name: Run tests
+        run: vendor/bin/pest
